@@ -1,0 +1,15 @@
+.dashboard {
+  background: #222831;
+  color: #fff;
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+  min-width: 250px;
+}
+.dashboard h3 {
+  margin-top: 0;
+}
+.dashboard div {
+  margin: 0.5rem 0;
+}

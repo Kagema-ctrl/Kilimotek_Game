@@ -1,0 +1,36 @@
+.farm-map {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+.zone {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #888;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.zone-crop {
+  background: #e0f7fa;
+}
+.zone-livestock {
+  background: #fff3e0;
+}
+.zone-irrigated {
+  border-color: #2196f3;
+  background: #b3e5fc;
+}
+.zone-fertilized {
+  border-color: #43a047;
+  background: #c8e6c9;
+}
+.zone-fed {
+  border-color: #ff9800;
+  background: #ffe0b2;
+}
