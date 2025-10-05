@@ -19,20 +19,18 @@ const initialIndicators = {
   livestockHealth: 70,
 };
 
-// NASA POWER API fetch for NDVI and precipitation
 type NasaData = { ndvi: number; precipitation: number };
 async function fetchNasaData(lat: number, lon: number, start: string, end: string): Promise<NasaData> {
-  const url = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=NDVI,PRECTOT&community=AG&longitude=${lon}&latitude=${lat}&start=${start}&end=${end}&format=JSON`;
+  // Only request precipitation (PRECTOT)
+  const url = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=PRECTOT&community=AG&longitude=${lon}&latitude=${lat}&start=${start}&end=${end}&format=JSON`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('NASA API error');
   const data = await res.json();
-  // Get the first available date
-  const ndviObj = data?.properties?.parameter?.NDVI;
   const prectotObj = data?.properties?.parameter?.PRECTOT;
-  if (!ndviObj || !prectotObj) throw new Error('NASA data missing');
-  const firstDate = Object.keys(ndviObj)[0];
+  if (!prectotObj) throw new Error('NASA data missing');
+  const firstDate = Object.keys(prectotObj)[0];
   return {
-    ndvi: ndviObj[firstDate],
+    ndvi: 0.5, // fallback static NDVI for MVP
     precipitation: prectotObj[firstDate],
   };
 }
@@ -45,7 +43,6 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Mwea Tebere, Kenya: lat -0.6167, lon 37.3833, pick Jan 2024
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -59,7 +56,12 @@ function App() {
         setLoading(false);
       })
       .catch(() => {
-        setError('Failed to fetch NASA data.');
+        setError('Failed to fetch NASA precipitation data. Using fallback values.');
+        setIndicators((prev) => ({
+          ...prev,
+          ndvi: 0.5,
+          rainfall: 10,
+        }));
         setLoading(false);
       });
   }, []);
@@ -67,7 +69,6 @@ function App() {
   const handleZoneAction = (zoneId: string, action: 'irrigate' | 'fertilize' | 'feed') => {
     setSelectedZone(zoneId);
     setZones((prev) => prev.map(z => z.id === zoneId ? { ...z, status: action === 'feed' ? 'fed' : action === 'irrigate' ? 'irrigated' : 'fertilized' } : z));
-    // Simulate indicator changes and feedback
     let newIndicators = { ...indicators };
     let msg = '';
     if (action === 'irrigate') {
@@ -93,11 +94,12 @@ function App() {
     <div className="App">
       <h1>Kilimotek: Farming from Space</h1>
       {loading ? (
-        <div>Loading NASA data…</div>
-      ) : error ? (
-        <div style={{ color: 'red' }}>{error}</div>
+        <div>Loading NASA precipitation data…</div>
       ) : (
         <Dashboard indicators={indicators} />
+      )}
+      {error && (
+        <div style={{ color: 'orange', marginBottom: '1rem' }}>{error}</div>
       )}
       <FarmMap
         zones={zones}
@@ -106,7 +108,7 @@ function App() {
       <Controls selectedZone={selectedZone} onAction={handleControlAction} />
       <FeedbackPanel message={feedback} />
       <div style={{marginTop: '2rem', fontSize: '0.9em', color: '#888'}}>
-        <p>NASA Data: NDVI & Precipitation for Mwea Tebere, Kenya (Jan 2024)</p>
+        <p>NASA Data: Precipitation for Mwea Tebere, Kenya (Jan 2024). NDVI is simulated for MVP.</p>
       </div>
     </div>
   );
